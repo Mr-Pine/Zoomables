@@ -6,10 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.animateZoomBy
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import de.mr_pine.android_util.ui.theme.AndroidUtilityLibrariesTheme
-import de.mr_pine.zoomable.EasyZoomableImage
+import de.mr_pine.zoomables.EasyZoomableImage
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -45,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         topBar = {
                             TopAppBar(
-                                title = {Text(text = "Zoom comparison")}
+                                title = { Text(text = "Zoom comparison") }
                             )
                         }
                     ) {
@@ -101,12 +98,15 @@ class MainActivity : ComponentActivity() {
                                             )
                                         }
                                         // add transformable to listen to multitouch transformation events after offset
-                                        .transformable(state = state)
+                                        .transformable(state = state, lockRotationOnZoomPan = true)
                                         // optional for example: add double click to zoom
                                         .pointerInput(Unit) {
                                             detectTapGestures(
                                                 onDoubleTap = {
-                                                    coroutineScope.launch { state.animateZoomBy(if(scale != 1f) 1/scale else 4f) }
+                                                    coroutineScope.launch {
+                                                        state.animateZoomBy(if (scale != 1f) 1 / scale else 4f)
+                                                        state.animateRotateBy(-rotation)
+                                                    }
                                                 }
                                             )
                                         }

@@ -1,6 +1,6 @@
 @file:JvmMultifileClass
 
-package de.mr_pine.zoomable
+package de.mr_pine.zoomables
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -212,6 +212,7 @@ public fun EasyZoomableImage(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val zoomableState = rememberZoomableState()
+
     Zoomable(coroutineScope = coroutineScope, zoomableState = zoomableState, onSwipeLeft = onSwipeLeft, onSwipeRight = onSwipeRight) {
         Image(
             imageVector = imageVector,
