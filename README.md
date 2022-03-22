@@ -8,4 +8,4 @@ If you have any issues or ideas how to improve any of these libraries feel free 
 
 This library provides Composables that handle nice and smooth zooming behaviour for you
 
-![](libraries/zoomable/Zoom_comparison.gif)
+![](libraries/zoomables/Zoom_comparison.gif)
