@@ -12,7 +12,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/libraries" />
-            <option value="$PROJECT_DIR$/libraries/zoomable" />
+            <option value="$PROJECT_DIR$/libraries/zoomables" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
