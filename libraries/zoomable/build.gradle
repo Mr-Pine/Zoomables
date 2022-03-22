@@ -67,17 +67,8 @@ afterEvaluate {
                 from components.release
 
                 // You can then customize attributes of the publication as shown below.
-                groupId = 'de.mr-pine.utils.zoomable'
-                artifactId = 'final'
-                version = '1.0'
-            }
-            // Creates a Maven publication called “debug”.
-            debug(MavenPublication) {
-                // Applies the component for the debug build variant.
-                from components.debug
-
-                groupId = 'de.mr-pine.utils.zoomable'
-                artifactId = 'final-debug'
+                groupId = 'de.mr-pine.utils'
+                artifactId = 'zoomables'
                 version = '1.0'
             }
         }
