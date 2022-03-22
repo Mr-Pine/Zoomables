@@ -9,7 +9,7 @@ This library provides Composables that handle nice and smooth zooming behaviour 
   
   Notice that the rotation and zoom are centered at the touch point with this library but at the center of the image with the other option
   
-  ![](zoomable/Zoom_comparison.gif)
+  ![](Zoom_comparison.gif)
   
 </details>
 
