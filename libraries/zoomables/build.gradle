@@ -55,14 +55,20 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
+ext{
+    PUBLISH_GROUP_ID = 'de.mr-pine.utils'
+    PUBLISH_VERSION = '1.0.0'
+    PUBLISH_ARTIFACT_ID = 'zoomables'
+}
+
+apply from: "${rootProject.projectDir}/scripts/publish-module.gradle"
 
 // Because the components are created only during the afterEvaluate phase, you must
 // configure your publications using the afterEvaluate() lifecycle method.
 afterEvaluate {
     publishing {
         publications {
-            // Creates a Maven publication called "release".
-            release(MavenPublication) {
+            mavenLocal(MavenPublication) {
                 // Applies the component for the release build variant.
                 from components.release
 
