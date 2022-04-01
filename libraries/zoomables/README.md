@@ -1,5 +1,7 @@
 # Jetpack Compose Zoomables
 
+[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables)
+
 This library provides Composables that handle nice and smooth zooming behaviour for you
 
 <details>
