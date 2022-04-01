@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+/SecretRingKey.gpg
+/secring.gpg
