@@ -26,3 +26,9 @@ This library provides Composables that handle nice and smooth zooming behaviour 
 - General Composables for with zooming behaviour
 - Special Composables for Images, reducing boilerplate code even further
 - A ZoomableState
+
+## How to use this library
+
+Import via gradle using this version number: [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables)
+
+`implementation "de.mr-pine.utils:zoomables:{Version number}"`
