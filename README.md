@@ -31,6 +31,4 @@ Notice that the rotation and zoom are centered at the touch point with this libr
 
 ## How to use this library
 
-Import via gradle using this version number: [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables) (currently 1.0.0, Maven Search not showing up)
-
-`implementation "de.mr-pine.utils:zoomables:{Version number}"`
+Import via gradle using this version number: [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables)
