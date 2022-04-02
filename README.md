@@ -1,11 +1,36 @@
-# AndroidUtilityLibraries
+# Zoomables
 
-A repository for different libraries to make developing an Android app easier
+[![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables)
+
+A Jetpack Compose Library provides Composables that handle nice and smooth zooming behaviour for you
 
 If you have any issues or ideas how to improve any of these libraries feel free to open an [issue](https://github.com/Mr-Pine/AndroidUtilityLibraries/issues/new/choose)
 
-## [Jetpack Compose Zoomables](libraries/zoomables)
+<details>
+  <summary>Show comparison</summary>
 
-This library provides Composables that handle nice and smooth zooming behaviour for you
+### Comparison between this library and the way recommended by the Android documentation
 
-![](libraries/zoomables/Zoom_comparison.gif)
+Notice that the rotation and zoom are centered at the touch point with this library but at the center of the image with the other option
+
+![](Zoom_comparison.gif)
+
+</details>
+
+## Why use this library?
+
+- It provides nicer zooming behaviour (see comparison)
+- Provides callback functions to handle swiping left/right on the image when not zoomed in
+- Reduces difficult to read code
+
+## What does this library provide?
+
+- General Composables for with zooming behaviour
+- Special Composables for Images, reducing boilerplate code even further
+- A ZoomableState
+
+## How to use this library
+
+Import via gradle using this version number: [![MavenCentral](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables/badge.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/de.mr-pine.utils/zoomables) (currently 1.0.0, Maven Search not showing up)
+
+`implementation "de.mr-pine.utils:zoomables:{Version number}"`

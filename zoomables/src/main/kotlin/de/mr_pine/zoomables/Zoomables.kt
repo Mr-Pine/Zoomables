@@ -2,13 +2,11 @@
 
 package de.mr_pine.zoomables
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -22,8 +20,6 @@ import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.*
-
-private const val TAG = "ZoomImage"
 
 /**
  * Creates a composable that wraps a given [Composable] and adds zoom, pan, rotation, double tap and swipe functionality
@@ -41,12 +37,9 @@ private const val TAG = "ZoomImage"
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param minimumSwipeDistance Minimum distance the user has to travel on the screen for it to count as swiping
- * @param lockRotationOnZoomPan - If true, rotation is allowed only if touch slop is detected for rotation before pan or zoom motions. If not, pan and zoom gestures will be detected, but rotation gestures will not be. If false, once touch slop is reached, all three gestures are detected.
-enabled - whether zooming by gestures is enabled or not
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in by default
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x to the touch point when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
-@OptIn(ExperimentalComposeUiApi::class)
-@ExperimentalFoundationApi
+
 @Composable
 public fun Zoomable(
     coroutineScope: CoroutineScope,
@@ -54,8 +47,15 @@ public fun Zoomable(
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     minimumSwipeDistance: Int = 0,
-    lockRotationOnZoomPan: Boolean = true,
-    onDoubleTap: (Offset) -> Unit = {
+    onDoubleTap: ((Offset) -> Unit)? = null,
+    Content: @Composable (BoxScope.() -> Unit),
+) {
+
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+    var composableCenter by remember { mutableStateOf(Offset.Zero) }
+    var transformOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val doubleTapFunction = onDoubleTap?: {
         if (zoomableState.scale.value != 1f) {
             coroutineScope.launch {
                 zoomableState.animateBy(
@@ -64,18 +64,15 @@ public fun Zoomable(
                     rotationChange = -zoomableState.rotation.value
                 )
             }
+            Unit
         } else {
             coroutineScope.launch {
-                zoomableState.animateZoomBy(2f)
+                zoomableState.animateZoomToPosition(2f, position = it, composableCenter)
+                //zoomableState.animateZoomBy(2f)
             }
+            Unit
         }
-    },
-    Content: @Composable (BoxScope.() -> Unit),
-) {
-
-    var dragOffset by remember { mutableStateOf(Offset.Zero) }
-    var composableCenter by remember { mutableStateOf(Offset.Zero) }
-    var transformOffset by remember { mutableStateOf(Offset.Zero) }
+    }
 
     fun onTransformGesture(
         centroid: Offset,
@@ -83,8 +80,9 @@ public fun Zoomable(
         zoom: Float,
         transformRotation: Float
     ) {
+        val rotationChange = if(zoomableState.rotationBehavior == ZoomableState.Rotation.DISABLED) 0f else transformRotation
 
-        var tempOffset = zoomableState.offset.value + pan
+        val tempOffset = zoomableState.offset.value + pan
 
         val x0 = centroid.x - composableCenter.x
         val y0 = centroid.y - composableCenter.y
@@ -98,21 +96,20 @@ public fun Zoomable(
 
         val alpha0 = atan(y0 / x0)
 
-        val alpha1 = alpha0 + (transformRotation * ((2 * PI) / 360))
+        val alpha1 = alpha0 + (rotationChange * ((2 * PI) / 360))
 
         val x1 = cos(alpha1) * hyp1
         val y1 = sin(alpha1) * hyp1
 
         transformOffset =
             centroid - (composableCenter - tempOffset) - Offset(x1.toFloat(), y1.toFloat())
-        tempOffset = transformOffset
 
         coroutineScope.launch {
             zoomableState.transform {
                 transformBy(
                     zoomChange = zoom,
-                    panChange = tempOffset - zoomableState.offset.value,
-                    rotationChange = transformRotation
+                    panChange = transformOffset - zoomableState.offset.value,
+                    rotationChange = rotationChange
                 )
             }
         }
@@ -123,7 +120,7 @@ public fun Zoomable(
         Modifier
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = onDoubleTap
+                    onDoubleTap = doubleTapFunction
                 )
             }
             .pointerInput(Unit) {
@@ -170,7 +167,7 @@ public fun Zoomable(
                                         ) {
                                             pastTouchSlop = true
                                             lockedToPanZoom =
-                                                lockRotationOnZoomPan && rotationMotion < touchSlop
+                                                zoomableState.rotationBehavior == ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN && rotationMotion < touchSlop
                                         }
                                     }
 
@@ -202,7 +199,7 @@ public fun Zoomable(
                         } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
 
                         do {
-                            val event = awaitPointerEvent()
+                            awaitPointerEvent()
                             drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
                                 change.consumePositionChange()
                                 overSlop = over

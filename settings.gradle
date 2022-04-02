@@ -13,6 +13,5 @@ dependencyResolutionManagement {
         mavenLocal()
     }
 }
-rootProject.name = "Android Utility Libraries"
-include ':app'
-include ':libraries:zoomables'
+rootProject.name = "Zoomables Library"
+include ':zoomables'
