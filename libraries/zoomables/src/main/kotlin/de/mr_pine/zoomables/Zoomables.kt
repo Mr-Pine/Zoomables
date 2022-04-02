@@ -37,8 +37,9 @@ import kotlin.math.*
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param minimumSwipeDistance Minimum distance the user has to travel on the screen for it to count as swiping
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in by default
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x to the touch point when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
+
 @Composable
 public fun Zoomable(
     coroutineScope: CoroutineScope,
@@ -46,7 +47,15 @@ public fun Zoomable(
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     minimumSwipeDistance: Int = 0,
-    onDoubleTap: (Offset) -> Unit = {
+    onDoubleTap: ((Offset) -> Unit)? = null,
+    Content: @Composable (BoxScope.() -> Unit),
+) {
+
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+    var composableCenter by remember { mutableStateOf(Offset.Zero) }
+    var transformOffset by remember { mutableStateOf(Offset.Zero) }
+
+    val doubleTapFunction = onDoubleTap?: {
         if (zoomableState.scale.value != 1f) {
             coroutineScope.launch {
                 zoomableState.animateBy(
@@ -55,18 +64,15 @@ public fun Zoomable(
                     rotationChange = -zoomableState.rotation.value
                 )
             }
+            Unit
         } else {
             coroutineScope.launch {
-                zoomableState.animateZoomBy(2f)
+                zoomableState.animateZoomToPosition(2f, position = it, composableCenter)
+                //zoomableState.animateZoomBy(2f)
             }
+            Unit
         }
-    },
-    Content: @Composable (BoxScope.() -> Unit),
-) {
-
-    var dragOffset by remember { mutableStateOf(Offset.Zero) }
-    var composableCenter by remember { mutableStateOf(Offset.Zero) }
-    var transformOffset by remember { mutableStateOf(Offset.Zero) }
+    }
 
     fun onTransformGesture(
         centroid: Offset,
@@ -76,7 +82,7 @@ public fun Zoomable(
     ) {
         val rotationChange = if(zoomableState.rotationBehavior == ZoomableState.Rotation.DISABLED) 0f else transformRotation
 
-        var tempOffset = zoomableState.offset.value + pan
+        val tempOffset = zoomableState.offset.value + pan
 
         val x0 = centroid.x - composableCenter.x
         val y0 = centroid.y - composableCenter.y
@@ -97,13 +103,12 @@ public fun Zoomable(
 
         transformOffset =
             centroid - (composableCenter - tempOffset) - Offset(x1.toFloat(), y1.toFloat())
-        tempOffset = transformOffset
 
         coroutineScope.launch {
             zoomableState.transform {
                 transformBy(
                     zoomChange = zoom,
-                    panChange = tempOffset - zoomableState.offset.value,
+                    panChange = transformOffset - zoomableState.offset.value,
                     rotationChange = rotationChange
                 )
             }
@@ -115,7 +120,7 @@ public fun Zoomable(
         Modifier
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onDoubleTap = onDoubleTap
+                    onDoubleTap = doubleTapFunction
                 )
             }
             .pointerInput(Unit) {

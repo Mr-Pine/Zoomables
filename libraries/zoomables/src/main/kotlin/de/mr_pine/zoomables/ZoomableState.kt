@@ -12,6 +12,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import de.mr_pine.zoomables.ZoomableState.Rotation.*
 import kotlinx.coroutines.coroutineScope
+import kotlin.math.atan
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 
 /**
@@ -81,6 +85,30 @@ public class ZoomableState(
                 )
             }
         }
+    }
+
+    public suspend fun animateZoomToPosition(zoomChange: Float, position: Offset, currentComposableCenter: Offset = Offset.Zero) {
+        val offsetBuffer = offset.value
+
+        val x0 = position.x - currentComposableCenter.x
+        val y0 = position.y - currentComposableCenter.y
+
+        val hyp0 = sqrt(x0 * x0 + y0 * y0)
+        val hyp1 = zoomChange * hyp0 * (if (x0 > 0) {
+            1f
+        } else {
+            -1f
+        })
+
+        val alpha0 = atan(y0 / x0)
+
+        val x1 = cos(alpha0) * hyp1
+        val y1 = sin(alpha0) * hyp1
+
+        val transformOffset =
+            position - (currentComposableCenter - offsetBuffer) - Offset(x1, y1)
+
+        animateBy(zoomChange = zoomChange, panChange = transformOffset, rotationChange = 0f)
     }
 
     /**

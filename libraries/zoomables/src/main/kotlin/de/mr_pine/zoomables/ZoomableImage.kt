@@ -3,7 +3,6 @@
 package de.mr_pine.zoomables
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.animateZoomBy
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -12,7 +11,6 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 
 /**
@@ -25,7 +23,7 @@ import kotlinx.coroutines.launch
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in by default
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
 public fun ZoomableImage(
@@ -36,21 +34,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    onDoubleTap: (Offset) -> Unit = {
-        if (zoomableState.scale.value != 1f) {
-            coroutineScope.launch {
-                zoomableState.animateBy(
-                    zoomChange = 1 / zoomableState.scale.value,
-                    panChange = -zoomableState.offset.value,
-                    rotationChange = -zoomableState.rotation.value
-                )
-            }
-        } else {
-            coroutineScope.launch {
-                zoomableState.animateZoomBy(2f)
-            }
-        }
-    },
+    onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
@@ -73,7 +57,7 @@ public fun ZoomableImage(
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in by default
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
 public fun ZoomableImage(
@@ -84,21 +68,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    onDoubleTap: (Offset) -> Unit = {
-        if (zoomableState.scale.value != 1f) {
-            coroutineScope.launch {
-                zoomableState.animateBy(
-                    zoomChange = 1 / zoomableState.scale.value,
-                    panChange = -zoomableState.offset.value,
-                    rotationChange = -zoomableState.rotation.value
-                )
-            }
-        } else {
-            coroutineScope.launch {
-                zoomableState.animateZoomBy(2f)
-            }
-        }
-    },
+    onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
@@ -125,7 +95,7 @@ public fun ZoomableImage(
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in by default
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
 public fun ZoomableImage(
@@ -136,21 +106,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    onDoubleTap: (Offset) -> Unit = {
-        if (zoomableState.scale.value != 1f) {
-            coroutineScope.launch {
-                zoomableState.animateBy(
-                    zoomChange = 1 / zoomableState.scale.value,
-                    panChange = -zoomableState.offset.value,
-                    rotationChange = -zoomableState.rotation.value
-                )
-            }
-        } else {
-            coroutineScope.launch {
-                zoomableState.animateZoomBy(2f)
-            }
-        }
-    },
+    onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
