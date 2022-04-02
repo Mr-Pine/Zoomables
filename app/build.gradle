@@ -58,7 +58,6 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
-    implementation "de.mr-pine.utils:zoomables:1.0.0"
-    //implementation project(':libraries:zoomables')
-    //implementation "de.mr-pine.utils.zoom-image:final:1.0"
+    //implementation "de.mr-pine.utils:zoomables:1.0.0" //use this MavenCentral dependency when not using in this project
+    implementation project(':libraries:zoomables')
 }

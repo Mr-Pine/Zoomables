@@ -24,7 +24,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import de.mr_pine.android_util.ui.theme.AndroidUtilityLibrariesTheme
-import de.mr_pine.zoomables.EasyZoomableImage
+import de.mr_pine.zoomables.ZoomableImage
+import de.mr_pine.zoomables.rememberZoomableState
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -62,7 +63,9 @@ class MainActivity : ComponentActivity() {
                             }
                             if (currentTab == 0) {
                                 val context = LocalContext.current
-                                EasyZoomableImage(
+                                ZoomableImage(
+                                    coroutineScope = rememberCoroutineScope(),
+                                    zoomableState = rememberZoomableState(),
                                     painter = painterResource(id = R.drawable.phoenix),
                                     modifier = Modifier.fillMaxSize(),
                                     onSwipeRight = {

@@ -10,9 +10,9 @@ import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
+import de.mr_pine.zoomables.ZoomableState.Rotation.*
 import kotlinx.coroutines.coroutineScope
 
-private const val TAG = "ZoomableState"
 
 /**
  * An implementation of [TransformableState] containing the values for the current [scale], [offset] and [rotation]. It's normally obtained using [rememberTransformableState]
@@ -35,17 +35,12 @@ public class ZoomableState(
     public var scale: MutableState<Float>,
     public var offset: MutableState<Offset>,
     public var rotation: MutableState<Float>,
-    onTransformation: ((zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit)? = null
+    public val rotationBehavior: Rotation,
+    onTransformation: ZoomableState.(zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit
 ) : TransformableState {
     private val transformScope: TransformScope = object : TransformScope {
         override fun transformBy(zoomChange: Float, panChange: Offset, rotationChange: Float) =
-            if (onTransformation != null) {
-                onTransformation.invoke(zoomChange, panChange, rotationChange)
-            } else {
-                scale.value *= zoomChange
-                offset.value += panChange
-                rotation.value = (rotation.value + rotationChange + 360 + 180) % 360 - 180
-            }
+            onTransformation(zoomChange, panChange, rotationChange)
     }
 
     private val transformMutex = MutatorMutex()
@@ -87,45 +82,67 @@ public class ZoomableState(
             }
         }
     }
+
+    /**
+     * This enum specifies rotation behaviour for a [ZoomableState]
+     *
+     * Can be [ALWAYS_ENABLED], [LOCK_ROTATION_ON_ZOOM_PAN] or [DISABLED]
+     */
+    public enum class Rotation {
+        /**
+         * Rotating the touch points (your fingers) will always result in rotation of the composable
+         */
+        ALWAYS_ENABLED,
+
+        /**
+         * Rotation is allowed only if touch slop is detected for rotation before pan or zoom motions. If not, pan and zoom gestures will be detected, but rotation gestures will not be.
+         */
+        LOCK_ROTATION_ON_ZOOM_PAN,
+
+        /**
+         * Rotation gestures will not be detected
+         */
+        DISABLED
+    }
 }
 
 /**
- * @param zoom The initial zoom level of this State.
- * @param offset The initial zoom level of this State
- * @param rotation The initial zoom level of this State
+ * @param initialZoom The initial zoom level of this State.
+ * @param initialOffset The initial zoom level of this State
+ * @param initialRotation The initial zoom level of this State
+ *
+ * @param rotationBehavior Set how this state handles rotation gestures
  *
  * @param onTransformation callback invoked when transformation occurs. The callback receives the
  * change from the previous event. It's relative scale multiplier for zoom, [Offset] in pixels
  * for pan and degrees for rotation. If this parameter is null the default behaviour is
  * zooming, panning and rotating by the supplied changes. Rotation is kept between positive and negative 180
  *
- * @return A [ZoomableState] initialized with the given [zoom], [offset] and [rotation]
+ * @return A [ZoomableState] initialized with the given [initialZoom], [initialOffset] and [initialRotation]
  */
 @Composable
 public fun rememberZoomableState(
-    zoom: Float = 1f,
-    offset: Offset = Offset.Zero,
-    rotation: Float = 0f,
-    onTransformation: ((zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit)? = null
+    initialZoom: Float = 1f,
+    initialOffset: Offset = Offset.Zero,
+    initialRotation: Float = 0f,
+    rotationBehavior: ZoomableState.Rotation = LOCK_ROTATION_ON_ZOOM_PAN,
+    onTransformation: ZoomableState.(zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit = { zoomChange, panChange, rotationChange ->
+        scale.value *= zoomChange
+        offset.value += panChange
+        rotation.value = (rotation.value + rotationChange + 360 + 180) % 360 - 180
+    }
 ): ZoomableState {
-    val zoomR = remember { mutableStateOf(zoom) }
-    val panR = remember { mutableStateOf(offset) }
-    val rotationR = remember { mutableStateOf(rotation) }
+    val zoomR = remember { mutableStateOf(initialZoom) }
+    val panR = remember { mutableStateOf(initialOffset) }
+    val rotationR = remember { mutableStateOf(initialRotation) }
     val lambdaState = rememberUpdatedState(newValue = onTransformation)
     return remember {
         ZoomableState(
             zoomR,
             panR,
             rotationR,
-            if (lambdaState.value != null) {
-                { z, p, r ->
-                    lambdaState.value?.invoke(
-                        z,
-                        p,
-                        r
-                    )
-                }
-            } else null
+            rotationBehavior,
+            lambdaState.value::invoke
         )
     }
 }
