@@ -54,11 +54,11 @@ afterEvaluate {
                 pom {
                     name = PUBLISH_ARTIFACT_ID
                     description = 'A library provides Composables that handle nice and smooth zooming behaviour for you'
-                    url = 'https://github.com/Mr-Pine/AndroidUtilityLibraries/tree/master/libraries/zoomables'
+                    url = 'https://github.com/Mr-Pine/Zoomables'
                     licenses {
                         license {
                             name = 'Apache License 2.0'
-                            url = 'https://github.com/Mr-Pine/AndroidUtilityLibraries/blob/master/LICENSE'
+                            url = 'https://github.com/Mr-Pine/Zoomables/blob/master/LICENSE'
                         }
                     }
                     developers {
@@ -71,9 +71,9 @@ afterEvaluate {
                     // Version control info - if you're using GitHub, follow the
                     // format as seen here
                     scm {
-                        connection = 'scm:git:github.com/Mr-Pine/AndroidUtilityLibraries.git'
-                        developerConnection = 'scm:git:ssh://github.com/Mr-Pine/AndroidUtilityLibraries.git'
-                        url = 'https://github.com/Mr-Pine/AndroidUtilityLibraries/tree/master/libraries/zoomables'
+                        connection = 'scm:git:github.com/Mr-Pine/Zoomables.git'
+                        developerConnection = 'scm:git:ssh://github.com/Mr-Pine/Zoomables.git'
+                        url = 'https://github.com/Mr-Pine/Zoomables'
                     }
                 }
             }
