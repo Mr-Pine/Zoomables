@@ -34,6 +34,7 @@ import kotlin.math.*
  *
  * @param coroutineScope used for smooth asynchronous zoom/pan/rotation animations
  * @param zoomableState Contains the current transform states - obtained via [rememberZoomableState]
+ * @param swipeEnabled Enable user swipes in the unzoomed state - enabled by default
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param minimumSwipeDistance Minimum distance the user has to travel on the screen for it to count as swiping
@@ -44,6 +45,7 @@ import kotlin.math.*
 public fun Zoomable(
     coroutineScope: CoroutineScope,
     zoomableState: ZoomableState,
+    swipeEnabled: Boolean = true,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     minimumSwipeDistance: Int = 0,
@@ -198,40 +200,42 @@ public fun Zoomable(
                             transformEventCounter++
                         } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
 
-                        do {
-                            awaitPointerEvent()
-                            drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
-                                change.consumePositionChange()
-                                overSlop = over
-                            }
-                        } while (drag != null && !drag.positionChangeConsumed())
-                        if (drag != null) {
-                            dragOffset = Offset.Zero
-                            if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                coroutineScope.launch {
-                                    zoomableState.transform {
-                                        transformBy(1f, overSlop, 0f)
-                                    }
+                        if (swipeEnabled || zoomableState.scale.value !in 0.92f..1.08f) {
+                            do {
+                                awaitPointerEvent()
+                                drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
+                                    change.consumePositionChange()
+                                    overSlop = over
                                 }
-                            } else {
-                                dragOffset += overSlop
-                            }
-                            if (drag(drag.id) {
-                                    if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                        zoomableState.offset.value += it.positionChange()
-                                    } else {
-                                        dragOffset += it.positionChange()
+                            } while (drag != null && !drag.positionChangeConsumed())
+                            if (drag != null) {
+                                dragOffset = Offset.Zero
+                                if (zoomableState.scale.value !in 0.92f..1.08f) {
+                                    coroutineScope.launch {
+                                        zoomableState.transform {
+                                            transformBy(1f, overSlop, 0f)
+                                        }
                                     }
-                                    it.consumePositionChange()
+                                } else {
+                                    dragOffset += overSlop
                                 }
-                            ) {
-                                if (zoomableState.scale.value in 0.92f..1.08f) {
-                                    val offsetX = dragOffset.x
-                                    if (offsetX > minimumSwipeDistance) {
-                                        onSwipeRight()
+                                if (drag(drag.id) {
+                                        if (zoomableState.scale.value !in 0.92f..1.08f) {
+                                            zoomableState.offset.value += it.positionChange()
+                                        } else {
+                                            dragOffset += it.positionChange()
+                                        }
+                                        it.consumePositionChange()
+                                    }
+                                ) {
+                                    if (zoomableState.scale.value in 0.92f..1.08f) {
+                                        val offsetX = dragOffset.x
+                                        if (offsetX > minimumSwipeDistance) {
+                                            onSwipeRight()
 
-                                    } else if (offsetX < -minimumSwipeDistance) {
-                                        onSwipeLeft()
+                                        } else if (offsetX < -minimumSwipeDistance) {
+                                            onSwipeLeft()
+                                        }
                                     }
                                 }
                             }
