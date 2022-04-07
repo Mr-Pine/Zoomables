@@ -28,12 +28,12 @@ import kotlin.math.sqrt
  *
  * @param onTransformation callback invoked when transformation occurs. The callback receives the
  * change from the previous event. It's relative scale multiplier for zoom, [Offset] in pixels
- * for pan and degrees for rotation. If this parameter is null the default behaviour is
- * zooming, panning and rotating by the supplied changes. Rotation is kept between positive and negative 180
+ * for pan and degrees for rotation.
  *
  * @property scale The current scale as [MutableState]<[Float]>
  * @property offset The current offset as [MutableState]<[Offset]>
  * @property rotation The current rotation in degrees as [MutableState]<[Float]>
+ * @property notTransformed `true` if [scale] is `1`, [offset] is [Offset.Zero] and [rotation] is `0`
  */
 public class ZoomableState(
     public var scale: MutableState<Float>,
@@ -42,6 +42,12 @@ public class ZoomableState(
     public val rotationBehavior: Rotation,
     onTransformation: ZoomableState.(zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit
 ) : TransformableState {
+
+    public val notTransformed: Boolean
+        get() {
+            return scale.value in (1 - 1.0E-3f)..(1 + 1.0E-3f) && offset.value.getDistanceSquared()  in -1.0E-6f..1.0E-6f && rotation.value in -1.0E-3f..1.0E-3f
+        }
+
     private val transformScope: TransformScope = object : TransformScope {
         override fun transformBy(zoomChange: Float, panChange: Offset, rotationChange: Float) =
             onTransformation(zoomChange, panChange, rotationChange)
@@ -50,6 +56,7 @@ public class ZoomableState(
     private val transformMutex = MutatorMutex()
 
     private val isTransformingState = mutableStateOf(false)
+
 
     override suspend fun transform(
         transformPriority: MutatePriority,
@@ -87,7 +94,11 @@ public class ZoomableState(
         }
     }
 
-    public suspend fun animateZoomToPosition(zoomChange: Float, position: Offset, currentComposableCenter: Offset = Offset.Zero) {
+    public suspend fun animateZoomToPosition(
+        zoomChange: Float,
+        position: Offset,
+        currentComposableCenter: Offset = Offset.Zero
+    ) {
         val offsetBuffer = offset.value
 
         val x0 = position.x - currentComposableCenter.x
@@ -143,7 +154,7 @@ public class ZoomableState(
  *
  * @param onTransformation callback invoked when transformation occurs. The callback receives the
  * change from the previous event. It's relative scale multiplier for zoom, [Offset] in pixels
- * for pan and degrees for rotation. If this parameter is null the default behaviour is
+ * for pan and degrees for rotation. If not provided the default behaviour is
  * zooming, panning and rotating by the supplied changes. Rotation is kept between positive and negative 180
  *
  * @return A [ZoomableState] initialized with the given [initialZoom], [initialOffset] and [initialRotation]

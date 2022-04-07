@@ -23,6 +23,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
+ * @param dragGesturesEnabled A function with a [ZoomableState] scope that returns a boolean value to enable/disable dragging gestures (swiping and panning). Returns `true` by default. *Note*: For some use cases it may be required that only panning is possible. Use `{!notTransformed}` in that case
  * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
@@ -34,6 +35,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
+    dragGesturesEnabled: ZoomableState.() -> Boolean = { true },
     onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
@@ -41,6 +43,7 @@ public fun ZoomableImage(
         zoomableState = zoomableState,
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
+        dragGesturesEnabled = dragGesturesEnabled,
         onDoubleTap = onDoubleTap
     ) {
         Image(bitmap = bitmap, contentDescription = contentDescription, modifier = modifier)
@@ -57,6 +60,7 @@ public fun ZoomableImage(
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
+ * @param dragGesturesEnabled A function with a [ZoomableState] scope that returns a boolean value to enable/disable dragging gestures (swiping and panning). Returns `true` by default. *Note*: For some use cases it may be required that only panning is possible. Use `{!notTransformed}` in that case
  * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
@@ -68,6 +72,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
+    dragGesturesEnabled: ZoomableState.() -> Boolean = { true },
     onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
@@ -75,6 +80,7 @@ public fun ZoomableImage(
         zoomableState = zoomableState,
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
+        dragGesturesEnabled = dragGesturesEnabled,
         onDoubleTap = onDoubleTap
     ) {
         Image(
@@ -95,6 +101,7 @@ public fun ZoomableImage(
  * @param contentDescription text for accessibility see [Image] for further info
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
+ * @param dragGesturesEnabled A function with a [ZoomableState] scope that returns a boolean value to enable/disable dragging gestures (swiping and panning). Returns `true` by default. *Note*: For some use cases it may be required that only panning is possible. Use `{!notTransformed}` in that case
  * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
  */
 @Composable
@@ -106,6 +113,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
+    dragGesturesEnabled: ZoomableState.() -> Boolean = { true },
     onDoubleTap: ((Offset) -> Unit)? = null
 ) {
     Zoomable(
@@ -113,6 +121,7 @@ public fun ZoomableImage(
         zoomableState = zoomableState,
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
+        dragGesturesEnabled = dragGesturesEnabled,
         onDoubleTap = onDoubleTap
     ) {
         Image(painter = painter, contentDescription = contentDescription, modifier = modifier)
