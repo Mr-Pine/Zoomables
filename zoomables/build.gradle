@@ -57,7 +57,7 @@ dependencies {
 
 ext{
     PUBLISH_GROUP_ID = 'de.mr-pine.utils'
-    PUBLISH_VERSION = '1.1.1'
+    PUBLISH_VERSION = '1.1.2'
     PUBLISH_ARTIFACT_ID = 'zoomables'
 }
 

@@ -34,16 +34,18 @@ import kotlin.math.*
  *
  * @param coroutineScope used for smooth asynchronous zoom/pan/rotation animations
  * @param zoomableState Contains the current transform states - obtained via [rememberZoomableState]
+ * @param dragGesturesEnabled A function with a [ZoomableState] scope that returns a boolean value to enable/disable dragging gestures (swiping and panning). Returns `true` by default. *Note*: For some use cases it may be required that only panning is possible. Use `{!notTransformed}` in that case
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param minimumSwipeDistance Minimum distance the user has to travel on the screen for it to count as swiping
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x to the touch point when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
+ * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x to the touch point when scale is currently 1 and zooms out to scale = 1 when zoomed in when `null` (default)
  */
 
 @Composable
 public fun Zoomable(
     coroutineScope: CoroutineScope,
     zoomableState: ZoomableState,
+    dragGesturesEnabled: ZoomableState.() -> Boolean = { true },
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     minimumSwipeDistance: Int = 0,
@@ -198,40 +200,42 @@ public fun Zoomable(
                             transformEventCounter++
                         } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
 
-                        do {
-                            awaitPointerEvent()
-                            drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
-                                change.consumePositionChange()
-                                overSlop = over
-                            }
-                        } while (drag != null && !drag.positionChangeConsumed())
-                        if (drag != null) {
-                            dragOffset = Offset.Zero
-                            if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                coroutineScope.launch {
-                                    zoomableState.transform {
-                                        transformBy(1f, overSlop, 0f)
-                                    }
+                        if (zoomableState.dragGesturesEnabled()) {
+                            do {
+                                awaitPointerEvent()
+                                drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
+                                    change.consumePositionChange()
+                                    overSlop = over
                                 }
-                            } else {
-                                dragOffset += overSlop
-                            }
-                            if (drag(drag.id) {
-                                    if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                        zoomableState.offset.value += it.positionChange()
-                                    } else {
-                                        dragOffset += it.positionChange()
+                            } while (drag != null && !drag.positionChangeConsumed())
+                            if (drag != null) {
+                                dragOffset = Offset.Zero
+                                if (zoomableState.scale.value !in 0.92f..1.08f) {
+                                    coroutineScope.launch {
+                                        zoomableState.transform {
+                                            transformBy(1f, overSlop, 0f)
+                                        }
                                     }
-                                    it.consumePositionChange()
+                                } else {
+                                    dragOffset += overSlop
                                 }
-                            ) {
-                                if (zoomableState.scale.value in 0.92f..1.08f) {
-                                    val offsetX = dragOffset.x
-                                    if (offsetX > minimumSwipeDistance) {
-                                        onSwipeRight()
+                                if (drag(drag.id) {
+                                        if (zoomableState.scale.value !in 0.92f..1.08f) {
+                                            zoomableState.offset.value += it.positionChange()
+                                        } else {
+                                            dragOffset += it.positionChange()
+                                        }
+                                        it.consumePositionChange()
+                                    }
+                                ) {
+                                    if (zoomableState.scale.value in 0.92f..1.08f) {
+                                        val offsetX = dragOffset.x
+                                        if (offsetX > minimumSwipeDistance) {
+                                            onSwipeRight()
 
-                                    } else if (offsetX < -minimumSwipeDistance) {
-                                        onSwipeLeft()
+                                        } else if (offsetX < -minimumSwipeDistance) {
+                                            onSwipeLeft()
+                                        }
                                     }
                                 }
                             }
