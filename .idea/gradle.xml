@@ -13,7 +13,6 @@
             <option value="$PROJECT_DIR$/zoomables" />
           </set>
         </option>
-        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>
