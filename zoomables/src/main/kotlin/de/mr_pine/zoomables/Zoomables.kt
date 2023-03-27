@@ -57,7 +57,7 @@ public fun Zoomable(
     var composableCenter by remember { mutableStateOf(Offset.Zero) }
     var transformOffset by remember { mutableStateOf(Offset.Zero) }
 
-    val doubleTapFunction = onDoubleTap?: {
+    val doubleTapFunction = onDoubleTap ?: {
         if (zoomableState.scale.value != 1f) {
             coroutineScope.launch {
                 zoomableState.animateBy(
@@ -70,7 +70,6 @@ public fun Zoomable(
         } else {
             coroutineScope.launch {
                 zoomableState.animateZoomToPosition(2f, position = it, composableCenter)
-                //zoomableState.animateZoomBy(2f)
             }
             Unit
         }
@@ -82,7 +81,8 @@ public fun Zoomable(
         zoom: Float,
         transformRotation: Float
     ) {
-        val rotationChange = if(zoomableState.rotationBehavior == ZoomableState.Rotation.DISABLED) 0f else transformRotation
+        val rotationChange =
+            if (zoomableState.rotationBehavior == ZoomableState.Rotation.DISABLED) 0f else transformRotation
 
         val tempOffset = zoomableState.offset.value + pan
 
@@ -103,8 +103,7 @@ public fun Zoomable(
         val x1 = cos(alpha1) * hyp1
         val y1 = sin(alpha1) * hyp1
 
-        transformOffset =
-            centroid - (composableCenter - tempOffset) - Offset(x1.toFloat(), y1.toFloat())
+        transformOffset = centroid - (composableCenter - tempOffset) - Offset(x1.toFloat(), y1.toFloat())
 
         coroutineScope.launch {
             zoomableState.transform {
@@ -118,131 +117,115 @@ public fun Zoomable(
 
     }
 
-    Box(
-        Modifier
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onDoubleTap = doubleTapFunction
-                )
-            }
-            .pointerInput(Unit) {
-                forEachGesture {
-                    awaitPointerEventScope {
-                        var transformRotation = 0f
-                        var zoom = 1f
-                        var pan = Offset.Zero
-                        var pastTouchSlop = false
-                        val touchSlop = viewConfiguration.touchSlop
-                        var lockedToPanZoom = false
-                        var drag: PointerInputChange?
-                        var overSlop = Offset.Zero
+    Box(Modifier
+        .pointerInput(Unit) {
+            detectTapGestures(
+                onDoubleTap = doubleTapFunction
+            )
+        }
+        .pointerInput(Unit) {
+            awaitEachGesture {
+                var transformRotation = 0f
+                var zoom = 1f
+                var pan = Offset.Zero
+                var pastTouchSlop = false
+                val touchSlop = viewConfiguration.touchSlop
+                var lockedToPanZoom = false
+                var drag: PointerInputChange?
+                var overSlop = Offset.Zero
 
-                        val down = awaitFirstDown(requireUnconsumed = false)
+                val down = awaitFirstDown(requireUnconsumed = false)
 
 
-                        var transformEventCounter = 0
-                        do {
-                            val event = awaitPointerEvent()
-                            val canceled = event.changes.fastAny { it.positionChangeConsumed() }
-                            var relevant = true
-                            if (event.changes.size > 1) {
-                                if (!canceled) {
-                                    val zoomChange = event.calculateZoom()
-                                    val rotationChange = event.calculateRotation()
-                                    val panChange = event.calculatePan()
+                var transformEventCounter = 0
+                do {
+                    val event = awaitPointerEvent()
+                    val canceled = event.changes.fastAny { it.isConsumed }
+                    var relevant = true
+                    if (event.changes.size > 1) {
+                        if (!canceled) {
+                            val zoomChange = event.calculateZoom()
+                            val rotationChange = event.calculateRotation()
+                            val panChange = event.calculatePan()
 
-                                    if (!pastTouchSlop) {
-                                        zoom *= zoomChange
-                                        transformRotation += rotationChange
-                                        pan += panChange
+                            if (!pastTouchSlop) {
+                                zoom *= zoomChange
+                                transformRotation += rotationChange
+                                pan += panChange
 
-                                        val centroidSize =
-                                            event.calculateCentroidSize(useCurrent = false)
-                                        val zoomMotion = abs(1 - zoom) * centroidSize
-                                        val rotationMotion =
-                                            abs(transformRotation * PI.toFloat() * centroidSize / 180f)
-                                        val panMotion = pan.getDistance()
+                                val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                                val zoomMotion = abs(1 - zoom) * centroidSize
+                                val rotationMotion =
+                                    abs(transformRotation * PI.toFloat() * centroidSize / 180f)
+                                val panMotion = pan.getDistance()
 
-                                        if (zoomMotion > touchSlop ||
-                                            rotationMotion > touchSlop ||
-                                            panMotion > touchSlop
-                                        ) {
-                                            pastTouchSlop = true
-                                            lockedToPanZoom =
-                                                zoomableState.rotationBehavior == ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN && rotationMotion < touchSlop
-                                        }
-                                    }
+                                if (zoomMotion > touchSlop || rotationMotion > touchSlop || panMotion > touchSlop) {
+                                    pastTouchSlop = true
+                                    lockedToPanZoom =
+                                        zoomableState.rotationBehavior == ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN && rotationMotion < touchSlop
+                                }
+                            }
 
-                                    if (pastTouchSlop) {
-                                        val eventCentroid =
-                                            event.calculateCentroid(useCurrent = false)
-                                        val effectiveRotation =
-                                            if (lockedToPanZoom) 0f else rotationChange
-                                        if (effectiveRotation != 0f ||
-                                            zoomChange != 1f ||
-                                            panChange != Offset.Zero
-                                        ) {
-                                            onTransformGesture(
-                                                eventCentroid,
-                                                panChange,
-                                                zoomChange,
-                                                effectiveRotation
-                                            )
-                                        }
-                                        event.changes.fastForEach {
-                                            if (it.positionChanged()) {
-                                                it.consumeAllChanges()
-                                            }
-                                        }
+                            if (pastTouchSlop) {
+                                val eventCentroid = event.calculateCentroid(useCurrent = false)
+                                val effectiveRotation = if (lockedToPanZoom) 0f else rotationChange
+                                if (effectiveRotation != 0f || zoomChange != 1f || panChange != Offset.Zero) {
+                                    onTransformGesture(
+                                        eventCentroid, panChange, zoomChange, effectiveRotation
+                                    )
+                                }
+                                event.changes.fastForEach {
+                                    if (it.positionChanged()) {
+                                        it.consume()
                                     }
                                 }
-                            } else if (transformEventCounter > 3) relevant = false
-                            transformEventCounter++
-                        } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
+                            }
+                        }
+                    } else if (transformEventCounter > 3) relevant = false
+                    transformEventCounter++
+                } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
 
-                        if (zoomableState.dragGesturesEnabled()) {
-                            do {
-                                awaitPointerEvent()
-                                drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
-                                    change.consumePositionChange()
-                                    overSlop = over
+                if (zoomableState.dragGesturesEnabled()) {
+                    do {
+                        awaitPointerEvent()
+                        drag = awaitTouchSlopOrCancellation(down.id) { change, over ->
+                            if (change.positionChange() != Offset.Zero) change.consume()
+                            overSlop = over
+                        }
+                    } while (drag != null && !drag.isConsumed)
+                    if (drag != null) {
+                        dragOffset = Offset.Zero
+                        if (zoomableState.scale.value !in 0.92f..1.08f) {
+                            coroutineScope.launch {
+                                zoomableState.transform {
+                                    transformBy(1f, overSlop, 0f)
                                 }
-                            } while (drag != null && !drag.positionChangeConsumed())
-                            if (drag != null) {
-                                dragOffset = Offset.Zero
+                            }
+                        } else {
+                            dragOffset += overSlop
+                        }
+                        if (drag(drag.id) {
                                 if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                    coroutineScope.launch {
-                                        zoomableState.transform {
-                                            transformBy(1f, overSlop, 0f)
-                                        }
-                                    }
+                                    zoomableState.offset.value += it.positionChange()
                                 } else {
-                                    dragOffset += overSlop
+                                    dragOffset += it.positionChange()
                                 }
-                                if (drag(drag.id) {
-                                        if (zoomableState.scale.value !in 0.92f..1.08f) {
-                                            zoomableState.offset.value += it.positionChange()
-                                        } else {
-                                            dragOffset += it.positionChange()
-                                        }
-                                        it.consumePositionChange()
-                                    }
-                                ) {
-                                    if (zoomableState.scale.value in 0.92f..1.08f) {
-                                        val offsetX = dragOffset.x
-                                        if (offsetX > minimumSwipeDistance) {
-                                            onSwipeRight()
+                                if (it.positionChange() != Offset.Zero) it.consume()
+                            }) {
+                            if (zoomableState.scale.value in 0.92f..1.08f) {
+                                val offsetX = dragOffset.x
+                                if (offsetX > minimumSwipeDistance) {
+                                    onSwipeRight()
 
-                                        } else if (offsetX < -minimumSwipeDistance) {
-                                            onSwipeLeft()
-                                        }
-                                    }
+                                } else if (offsetX < -minimumSwipeDistance) {
+                                    onSwipeLeft()
                                 }
                             }
                         }
                     }
                 }
             }
+        }
     ) {
         Box(
             modifier = Modifier

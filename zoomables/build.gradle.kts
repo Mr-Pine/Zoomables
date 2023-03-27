@@ -4,14 +4,14 @@ plugins {
     alias(libs.plugins.android.library)
     kotlin("android")
     `maven-publish`
+    alias(libs.plugins.dokka)
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 22
-        targetSdk = 31
     }
 
     buildTypes {
@@ -53,8 +53,8 @@ dependencies {
     implementation(libs.compose.ui.util)
     implementation(libs.compose.material)
     testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.3")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
 
 /*ext {
