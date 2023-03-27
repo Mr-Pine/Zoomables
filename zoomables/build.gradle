@@ -38,6 +38,7 @@ android {
     buildFeatures {
         compose true
     }
+    namespace 'de.mr_pine.zoomables'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
