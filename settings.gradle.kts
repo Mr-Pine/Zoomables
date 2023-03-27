@@ -14,4 +14,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Zoomables Library"
-include ':zoomables'
+include(":zoomables")
+include(":zoomables_testing")
