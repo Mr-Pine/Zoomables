@@ -17,6 +17,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+private const val zoomedThreshold = 1.0E-3f
 
 /**
  * An implementation of [TransformableState] containing the values for the current [scale], [offset] and [rotation]. It's normally obtained using [rememberTransformableState]
@@ -43,9 +44,12 @@ public class ZoomableState(
     onTransformation: ZoomableState.(zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit
 ) : TransformableState {
 
+    public val zoomed: Boolean
+        get() = scale.value in (1 - zoomedThreshold)..(1 + zoomedThreshold)
+
     public val notTransformed: Boolean
         get() {
-            return scale.value in (1 - 1.0E-3f)..(1 + 1.0E-3f) && offset.value.getDistanceSquared()  in -1.0E-6f..1.0E-6f && rotation.value in -1.0E-3f..1.0E-3f
+            return zoomed && offset.value.getDistanceSquared() in -1.0E-6f..1.0E-6f && rotation.value in -1.0E-3f..1.0E-3f
         }
 
     private val transformScope: TransformScope = object : TransformScope {
