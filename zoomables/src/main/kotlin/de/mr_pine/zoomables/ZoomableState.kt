@@ -23,6 +23,8 @@ private const val zoomedThreshold = 1.0E-3f
  * An implementation of [TransformableState] containing the values for the current [scale], [offset] and [rotation]. It's normally obtained using [rememberTransformableState]
  * Other than [TransformableState] obtained by [rememberTransformableState], [ZoomableState] exposes [scale], [offset] and [rotation]
  *
+ * As
+ *
  * @param scale [MutableState]<[Float]> of the scale this state is initialized with
  * @param offset [MutableState]<[Offset]> of the offset this state is initialized with
  * @param rotation [MutableState]<[Float]> in degrees of the rotation this state is initialized with
@@ -34,7 +36,8 @@ private const val zoomedThreshold = 1.0E-3f
  * @property scale The current scale as [MutableState]<[Float]>
  * @property offset The current offset as [MutableState]<[Offset]>
  * @property rotation The current rotation in degrees as [MutableState]<[Float]>
- * @property notTransformed `true` if [scale] is `1`, [offset] is [Offset.Zero] and [rotation] is `0`
+ * @property transformed `false` if [scale] is `1`, [offset] is [Offset.Zero] and [rotation] is `0`
+ * @property zoomed Whether the content is zoomed (in or out)
  */
 public class ZoomableState(
     public var scale: MutableState<Float>,
@@ -47,10 +50,8 @@ public class ZoomableState(
     public val zoomed: Boolean
         get() = scale.value in (1 - zoomedThreshold)..(1 + zoomedThreshold)
 
-    public val notTransformed: Boolean
-        get() {
-            return zoomed && offset.value.getDistanceSquared() in -1.0E-6f..1.0E-6f && rotation.value in -1.0E-3f..1.0E-3f
-        }
+    public val transformed: Boolean
+        get() = zoomed || offset.value.getDistanceSquared() !in -1.0E-6f..1.0E-6f || rotation.value !in -1.0E-3f..1.0E-3f
 
     private val transformScope: TransformScope = object : TransformScope {
         override fun transformBy(zoomChange: Float, panChange: Offset, rotationChange: Float) =

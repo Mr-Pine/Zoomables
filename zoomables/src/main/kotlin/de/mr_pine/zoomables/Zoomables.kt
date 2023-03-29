@@ -37,7 +37,7 @@ import kotlin.math.*
  *
  * @param coroutineScope used for smooth asynchronous zoom/pan/rotation animations
  * @param zoomableState Contains the current transform states - obtained via [rememberZoomableState]
- * @param dragGestureMode A function with a [ZoomableState] scope that returns a boolean value to enable/disable dragging gestures (swiping and panning). Returns `true` by default. *Note*: For some use cases it may be required that only panning is possible. Use `{!notTransformed}` in that case
+ * @param dragGestureMode A function with a [ZoomableState] scope that returns a [DragGestureMode] value that signals which drag gesture should currently be active. By default panning is enabled when zoomed, else swipe gestures are enabled.
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param minimumSwipeDistance Minimum distance the user has to travel on the screen for it to count as swiping
