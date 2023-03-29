@@ -16,3 +16,4 @@ local.properties
 /SecretRingKey.gpg
 /secring.gpg
 /zoomables_testing
+/buildSrc/src/main/kotlin/myPublishData.kt

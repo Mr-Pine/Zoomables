@@ -5,6 +5,7 @@ plugins {
     kotlin("android")
     `maven-publish`
     alias(libs.plugins.dokka)
+    signing
 }
 
 android {
@@ -39,7 +40,15 @@ android {
     buildFeatures {
         compose = true
     }
+
     namespace = "de.mr_pine.zoomables"
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 tasks.withType<KotlinCompile> {
@@ -47,7 +56,6 @@ tasks.withType<KotlinCompile> {
 }
 
 dependencies {
-
     implementation(libs.androidx.ktx)
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.util)
@@ -57,29 +65,47 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
 
-/*ext {
-    PUBLISH_GROUP_ID = "de.mr-pine.utils"
-    PUBLISH_VERSION = "1.1.2"
-    PUBLISH_ARTIFACT_ID = "zoomables"
-}*/
+publishing {
+    publications {
+        register<MavenPublication>("zoomables") {
+            groupId = publishData.artifact.group
+            artifactId = publishData.artifact.id
+            version = publishData.artifact.version
 
-//apply(from = "${rootProject.projectDir}/scripts/publish-module.gradle")
+            afterEvaluate {
+                from(components["release"])
+            }
 
-// Because the components are created only during the afterEvaluate phase, you must
-// configure your publications using the afterEvaluate() lifecycle method.
-/*
-afterEvaluate {
-    publishing {
-        publications {
-            mavenLocal(MavenPublication) {
-                // Applies the component for the release build variant.
-                from(components.release)
+            pom {
+                description.set("A library provides Composables that handle nice and smooth zooming behaviour for you")
+                name.set(publishData.artifact.id)
+                url.set("https://github.com/Mr-Pine/Zoomables")
 
-                // You can then customize attributes of the publication as shown below.
-                groupId = PUBLISH_GROUP_ID
-                artifactId = PUBLISH_ARTIFACT_ID
-                version = PUBLISH_VERSION
+                licenses {
+                    license {
+                        name.set("Apache License 2.0")
+                        url.set("https://github.com/Mr-Pine/Zoomables/blob/master/LICENSE")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("Mr-Pine")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:github.com/Mr-Pine/Zoomables.git")
+                    developerConnection.set("scm:git:ssh://github.com/Mr-Pine/Zoomables.git")
+                    url.set("https://github.com/Mr-Pine/Zoomables")
+                }
             }
         }
+
     }
-}*/
+}
+
+signing {
+    useGpgCmd()
+    sign(publishing.publications)
+}

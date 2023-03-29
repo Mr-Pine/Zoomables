@@ -11,4 +11,14 @@ tasks.create<Delete>("clean") {
     delete(rootProject.buildDir)
 }
 
-apply(from = "${rootDir}/scripts/publish-root.gradle")
+nexusPublishing {
+    this.repositories {
+        sonatype {
+            stagingProfileId.set(publishData.sonatypeStagingProfileId)
+            username.set(publishData.ossrh.username)
+            password.set(publishData.ossrh.password)
+            nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+            snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+        }
+    }
+}
