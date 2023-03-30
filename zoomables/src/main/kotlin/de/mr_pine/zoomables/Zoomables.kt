@@ -131,13 +131,11 @@ public fun Zoomable(
                     var pan = Offset.Zero
                     var pastTouchSlop = false
                     val touchSlop = viewConfiguration.touchSlop
-                    var lockedToPanZoom = false
                     var dragChange: PointerInputChange?
                     var overSlop = Offset.Zero
+                    var lockedToPanZoom = false
 
-                    Log.d(TAG, "Zoomable: ${currentEvent.changes}")
                     do {
-
                         var event = awaitPointerEvent()
                         var canceled = false
                         var relevant = true
@@ -249,9 +247,8 @@ public fun Zoomable(
                                 }
                             }
                         }
-                        Log.d(TAG, "Zoomable: ${currentEvent.changes}")
                         Log.d(TAG, "Zoomable: ${currentEvent.changes.map(PointerInputChange::isConsumed)}")
-                    } while (currentEvent.changes.any { !it.isConsumed })
+                    } while (currentEvent.changes.any { !it.isConsumed && !it.changedToUp()})
                 }
             }) {
         Box(
