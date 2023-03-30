@@ -2,6 +2,7 @@
 
 package de.mr_pine.zoomables
 
+import android.util.Log
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -23,6 +24,8 @@ import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.*
+
+private const val TAG = "Zoomables"
 
 /**
  * Creates a composable that wraps a given [Composable] and adds zoom, pan, rotation, double tap and swipe functionality
@@ -132,14 +135,17 @@ public fun Zoomable(
                     var pastTouchSlop = false
                     val touchSlop = viewConfiguration.touchSlop
                     var lockedToPanZoom = false
-                    var drag: PointerInputChange?
+                    var dragChange: PointerInputChange?
                     var overSlop = Offset.Zero
 
+                    var event = awaitPointerEvent()
+                    var canceled = false
+                    var relevant = true
+
                     var transformEventCounter = 0
-                    do {
-                        val event = awaitPointerEvent()
-                        val canceled = event.changes.fastAny { it.isConsumed }
-                        var relevant = true
+                    while (!canceled && event.changes.fastAny { it.pressed } && relevant) {
+                        canceled = event.changes.fastAny { it.isConsumed }
+                        relevant = true
                         if (event.changes.size > 1) {
                             if (!canceled) {
                                 val zoomChange = event.calculateZoom()
@@ -182,20 +188,30 @@ public fun Zoomable(
                                 }
                             }
                         } else if (transformEventCounter > 3) relevant = false
+
                         transformEventCounter++
-                    } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
+                        event = awaitPointerEvent()
+                    }
 
                     if (zoomableState.dragGestureMode() != DragGestureMode.DISABLED) {
-                        do {
-                            val event = awaitPointerEvent()
-                            drag = event.changes.firstOrNull()?.id?.let { pointerId ->
+                        dragChange = event.changes.firstOrNull()?.id?.let { pointerId ->
+                            awaitTouchSlopOrCancellation(pointerId) { change, over ->
+                                if (change.positionChange() != Offset.Zero) change.consume()
+                                overSlop = over
+                            }
+                        }
+
+                        while (dragChange != null && !dragChange.isConsumed) {
+                            Log.d(TAG, "Zoomable: ${event.changes}")
+                            dragChange = event.changes.firstOrNull()?.id?.let { pointerId ->
                                 awaitTouchSlopOrCancellation(pointerId) { change, over ->
                                     if (change.positionChange() != Offset.Zero) change.consume()
                                     overSlop = over
                                 }
                             }
-                        } while (drag != null && !drag.isConsumed)
-                        if (drag != null) {
+                            event = awaitPointerEvent()
+                        }
+                        if (dragChange != null) {
                             dragOffset = Offset.Zero
                             when (zoomableState.dragGestureMode()) {
                                 DragGestureMode.PAN -> coroutineScope.launch {
@@ -206,21 +222,21 @@ public fun Zoomable(
                                 DragGestureMode.SWIPE_GESTURES -> dragOffset += overSlop
                                 else -> {}
                             }
-                            if (drag(drag.id) {
-                                    when (zoomableState.dragGestureMode()) {
-                                        DragGestureMode.PAN -> {
-                                            zoomableState.offset.value += it.positionChange()
-                                        }
-                                        DragGestureMode.SWIPE_GESTURES -> dragOffset += it.positionChange()
-                                        else -> {}
+                            val dragSuccessful = drag(dragChange.id) {
+                                when (zoomableState.dragGestureMode()) {
+                                    DragGestureMode.PAN -> {
+                                        zoomableState.offset.value += it.positionChange()
                                     }
-                                    if (it.positionChange() != Offset.Zero) it.consume()
-                                }) {
+                                    DragGestureMode.SWIPE_GESTURES -> dragOffset += it.positionChange()
+                                    else -> {}
+                                }
+                                if (it.positionChange() != Offset.Zero) it.consume()
+                            }
+                            if (dragSuccessful) {
                                 if (zoomableState.dragGestureMode() == DragGestureMode.SWIPE_GESTURES) {
                                     val offsetX = dragOffset.x
                                     if (offsetX > minimumSwipeDistance) {
                                         onSwipeRight()
-
                                     } else if (offsetX < -minimumSwipeDistance) {
                                         onSwipeLeft()
                                     }
