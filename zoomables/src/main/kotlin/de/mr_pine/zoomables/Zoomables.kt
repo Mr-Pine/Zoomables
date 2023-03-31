@@ -2,7 +2,6 @@
 
 package de.mr_pine.zoomables
 
-import android.util.Log
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -21,8 +20,6 @@ import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.*
-
-private const val TAG = "Zoomables"
 
 /**
  * Creates a composable that wraps a given [Composable] and adds zoom, pan, rotation, double tap and swipe functionality
@@ -247,7 +244,6 @@ public fun Zoomable(
                                 }
                             }
                         }
-                        Log.d(TAG, "Zoomable: ${currentEvent.changes.map(PointerInputChange::isConsumed)}")
                     } while (currentEvent.changes.any { !it.isConsumed && !it.changedToUp()})
                 }
             }) {
