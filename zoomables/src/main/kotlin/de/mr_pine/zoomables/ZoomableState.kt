@@ -11,7 +11,9 @@ import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import de.mr_pine.zoomables.ZoomableState.Rotation.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.sin
@@ -38,17 +40,18 @@ private const val zoomedThreshold = 1.0E-3f
  * @property rotation The current rotation in degrees as [MutableState]<[Float]>
  * @property transformed `false` if [scale] is `1`, [offset] is [Offset.Zero] and [rotation] is `0`
  * @property zoomed Whether the content is zoomed (in or out)
+ * @property composableCenter The position of the content's center relative to the [Zoomable] Container when [offset] is [Offset.Zero]. Might break when this State is used for multiple [Zoomable]s
  */
 public class ZoomableState(
-    public var scale: MutableState<Float>,
-    public var offset: MutableState<Offset>,
-    public var rotation: MutableState<Float>,
+    public val scale: MutableState<Float>,
+    public val offset: MutableState<Offset>,
+    public val rotation: MutableState<Float>,
     public val rotationBehavior: Rotation,
     onTransformation: ZoomableState.(zoomChange: Float, panChange: Offset, rotationChange: Float) -> Unit
 ) : TransformableState {
 
     public val zoomed: Boolean
-        get() = scale.value in (1 - zoomedThreshold)..(1 + zoomedThreshold)
+        get() = scale.value !in (1 - zoomedThreshold)..(1 + zoomedThreshold)
 
     public val transformed: Boolean
         get() = zoomed || offset.value.getDistanceSquared() !in -1.0E-6f..1.0E-6f || rotation.value !in -1.0E-3f..1.0E-3f
@@ -61,6 +64,8 @@ public class ZoomableState(
     private val transformMutex = MutatorMutex()
 
     private val isTransformingState = mutableStateOf(false)
+
+    public var composableCenter: Offset by mutableStateOf(Offset.Zero)
 
 
     override suspend fun transform(
@@ -99,10 +104,18 @@ public class ZoomableState(
         }
     }
 
+
+    /**
+     * Animates a zoom towards the specified position
+     * @param zoomChange The zoom factor
+     * @param position The position to zoom towards
+     * @param currentComposableCenter The current center of the composable relative to the [Zoomable] container. Default might break if this state is used by multiple [Zoomable]s
+     */
     public suspend fun animateZoomToPosition(
         zoomChange: Float,
         position: Offset,
-        currentComposableCenter: Offset = Offset.Zero
+        currentComposableCenter: Offset = composableCenter + offset.value,
+        animationSpec: AnimationSpec<Float> = SpringSpec(stiffness = Spring.StiffnessLow)
     ) {
         val offsetBuffer = offset.value
 
@@ -124,7 +137,12 @@ public class ZoomableState(
         val transformOffset =
             position - (currentComposableCenter - offsetBuffer) - Offset(x1, y1)
 
-        animateBy(zoomChange = zoomChange, panChange = transformOffset, rotationChange = 0f)
+        animateBy(
+            zoomChange = zoomChange,
+            panChange = transformOffset,
+            rotationChange = 0f,
+            animationSpec
+        )
     }
 
     /**
@@ -147,6 +165,35 @@ public class ZoomableState(
          * Rotation gestures will not be detected
          */
         DISABLED
+    }
+
+
+    public inner class DefaultDoubleTapBehaviour(
+        private val zoomScale: Float = 2f,
+        private val animationSpec: AnimationSpec<Float> = SpringSpec(stiffness = Spring.StiffnessLow),
+        private val coroutineScope: CoroutineScope
+    ) : DoubleTapBehaviour {
+        override fun onDoubleTap(offset: Offset) {
+            if (scale.value != 1f) {
+                coroutineScope.launch {
+                    animateBy(
+                        zoomChange = 1 / scale.value,
+                        panChange = -this@ZoomableState.offset.value,
+                        rotationChange = -rotation.value,
+                        animationSpec = animationSpec
+                    )
+                }
+            } else {
+                coroutineScope.launch {
+                    animateZoomToPosition(
+                        zoomScale,
+                        position = offset,
+                        composableCenter,
+                        animationSpec = animationSpec
+                    )
+                }
+            }
+        }
     }
 }
 
