@@ -24,7 +24,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param dragGestureMode A function with a [ZoomableState] scope that returns a [DragGestureMode] value that signals which drag gesture should currently be active. By default panning is enabled when zoomed, else swipe gestures are enabled.
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
+ * @param doubleTapBehaviour A [DoubleTapBehaviour] providing a [DoubleTapBehaviour.onDoubleTap]. As [DoubleTapBehaviour] is a [functional Interface](https://kotlinlang.org/docs/fun-interfaces.html) you can just provide a lambda as a `onDoubleTap`
  */
 @Composable
 public fun ZoomableImage(
@@ -36,7 +36,8 @@ public fun ZoomableImage(
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
-    onDoubleTap: ((Offset) -> Unit)? = null
+    onTap: ((Offset) -> Unit)? = null,
+    doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
@@ -44,7 +45,8 @@ public fun ZoomableImage(
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
         dragGestureMode = dragGestureMode,
-        onDoubleTap = onDoubleTap
+        onTap = onTap,
+        doubleTapBehaviour = doubleTapBehaviour
     ) {
         Image(bitmap = bitmap, contentDescription = contentDescription, modifier = modifier)
     }
@@ -61,7 +63,7 @@ public fun ZoomableImage(
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param dragGestureMode A function with a [ZoomableState] scope that returns a [DragGestureMode] value that signals which drag gesture should currently be active. By default panning is enabled when zoomed, else swipe gestures are enabled.
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
+ * @param doubleTapBehaviour A [DoubleTapBehaviour] providing a [DoubleTapBehaviour.onDoubleTap]. As [DoubleTapBehaviour] is a [functional Interface](https://kotlinlang.org/docs/fun-interfaces.html) you can just provide a lambda as a `onDoubleTap`
  */
 @Composable
 public fun ZoomableImage(
@@ -73,7 +75,8 @@ public fun ZoomableImage(
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
-    onDoubleTap: ((Offset) -> Unit)? = null
+    onTap: ((Offset) -> Unit)? = null,
+    doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
@@ -81,7 +84,8 @@ public fun ZoomableImage(
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
         dragGestureMode = dragGestureMode,
-        onDoubleTap = onDoubleTap
+        onTap = onTap,
+        doubleTapBehaviour = doubleTapBehaviour,
     ) {
         Image(
             imageVector = imageVector,
@@ -102,7 +106,7 @@ public fun ZoomableImage(
  * @param onSwipeLeft Optional function to run when user swipes from right to left - does nothing by default
  * @param onSwipeRight Optional function to run when user swipes from left to right - does nothing by default
  * @param dragGestureMode A function with a [ZoomableState] scope that returns a [DragGestureMode] value that signals which drag gesture should currently be active. By default panning is enabled when zoomed, else swipe gestures are enabled.
- * @param onDoubleTap Optional function to run when user double taps. Zooms in by 2x when scale is currently 1 and zooms out to scale = 1 when zoomed in when null (default)
+ * @param doubleTapBehaviour A [DoubleTapBehaviour] providing a [DoubleTapBehaviour.onDoubleTap]. As [DoubleTapBehaviour] is a [functional Interface](https://kotlinlang.org/docs/fun-interfaces.html) you can just provide a lambda as a `onDoubleTap`
  */
 @Composable
 public fun ZoomableImage(
@@ -114,7 +118,8 @@ public fun ZoomableImage(
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
-    onDoubleTap: ((Offset) -> Unit)? = null
+    onTap: ((Offset) -> Unit)? = null,
+    doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
     Zoomable(
         coroutineScope = coroutineScope,
@@ -122,7 +127,8 @@ public fun ZoomableImage(
         onSwipeLeft = onSwipeLeft,
         onSwipeRight = onSwipeRight,
         dragGestureMode = dragGestureMode,
-        onDoubleTap = onDoubleTap
+        onTap = onTap,
+        doubleTapBehaviour = doubleTapBehaviour
     ) {
         Image(painter = painter, contentDescription = contentDescription, modifier = modifier)
     }
