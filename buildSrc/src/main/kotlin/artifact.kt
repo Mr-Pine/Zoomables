@@ -1,5 +1,5 @@
 val artifact = Artifact(
     group = "de.mr-pine.utils",
     id = "zoomables",
-    version = "1.2.1"
+    version = "1.2.2"
 )
