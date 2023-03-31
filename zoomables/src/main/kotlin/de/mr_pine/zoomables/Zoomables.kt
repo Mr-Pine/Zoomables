@@ -2,6 +2,7 @@
 
 package de.mr_pine.zoomables
 
+import android.util.Log
 import androidx.compose.foundation.gestures.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -12,10 +13,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.positionChange
-import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.input.pointer.*
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
@@ -23,6 +21,8 @@ import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.*
+
+private const val TAG = "Zoomables"
 
 /**
  * Creates a composable that wraps a given [Composable] and adds zoom, pan, rotation, double tap and swipe functionality
@@ -131,82 +131,101 @@ public fun Zoomable(
                     var pan = Offset.Zero
                     var pastTouchSlop = false
                     val touchSlop = viewConfiguration.touchSlop
-                    var lockedToPanZoom = false
-                    var drag: PointerInputChange?
+                    var dragChange: PointerInputChange?
                     var overSlop = Offset.Zero
+                    var lockedToPanZoom = false
 
-                    var transformEventCounter = 0
                     do {
-                        val event = awaitPointerEvent()
-                        val canceled = event.changes.fastAny { it.isConsumed }
+                        var event = awaitPointerEvent()
+                        var canceled = false
                         var relevant = true
-                        if (event.changes.size > 1) {
-                            if (!canceled) {
-                                val zoomChange = event.calculateZoom()
-                                val rotationChange = event.calculateRotation()
-                                val panChange = event.calculatePan()
 
-                                if (!pastTouchSlop) {
-                                    zoom *= zoomChange
-                                    transformRotation += rotationChange
-                                    pan += panChange
+                        var transformEventCounter = 0
+                        while (!canceled && event.changes.fastAny { it.pressed } && relevant) {
+                            canceled = event.changes.fastAny { it.isConsumed }
+                            relevant = true
+                            if (event.changes.size > 1) {
+                                if (!canceled) {
+                                    val zoomChange = event.calculateZoom()
+                                    val rotationChange = event.calculateRotation()
+                                    val panChange = event.calculatePan()
 
-                                    val centroidSize =
-                                        event.calculateCentroidSize(useCurrent = false)
-                                    val zoomMotion = abs(1 - zoom) * centroidSize
-                                    val rotationMotion =
-                                        abs(transformRotation * PI.toFloat() * centroidSize / 180f)
-                                    val panMotion = pan.getDistance()
+                                    if (!pastTouchSlop) {
+                                        zoom *= zoomChange
+                                        transformRotation += rotationChange
+                                        pan += panChange
 
-                                    if (zoomMotion > touchSlop || rotationMotion > touchSlop || panMotion > touchSlop) {
-                                        pastTouchSlop = true
-                                        lockedToPanZoom =
-                                            zoomableState.rotationBehavior == ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN && rotationMotion < touchSlop
+                                        val centroidSize =
+                                            event.calculateCentroidSize(useCurrent = false)
+                                        val zoomMotion = abs(1 - zoom) * centroidSize
+                                        val rotationMotion =
+                                            abs(transformRotation * PI.toFloat() * centroidSize / 180f)
+                                        val panMotion = pan.getDistance()
+
+                                        if (zoomMotion > touchSlop || rotationMotion > touchSlop || panMotion > touchSlop) {
+                                            pastTouchSlop = true
+                                            lockedToPanZoom =
+                                                zoomableState.rotationBehavior == ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN && rotationMotion < touchSlop
+                                        }
                                     }
-                                }
 
-                                if (pastTouchSlop) {
-                                    val eventCentroid = event.calculateCentroid(useCurrent = false)
-                                    val effectiveRotation =
-                                        if (lockedToPanZoom) 0f else rotationChange
-                                    if (effectiveRotation != 0f || zoomChange != 1f || panChange != Offset.Zero) {
-                                        onTransformGesture(
-                                            eventCentroid, panChange, zoomChange, effectiveRotation
-                                        )
-                                    }
-                                    event.changes.fastForEach {
-                                        if (it.positionChanged()) {
-                                            it.consume()
+                                    if (pastTouchSlop) {
+                                        val eventCentroid =
+                                            event.calculateCentroid(useCurrent = false)
+                                        val effectiveRotation =
+                                            if (lockedToPanZoom) 0f else rotationChange
+                                        if (effectiveRotation != 0f || zoomChange != 1f || panChange != Offset.Zero) {
+                                            onTransformGesture(
+                                                eventCentroid,
+                                                panChange,
+                                                zoomChange,
+                                                effectiveRotation
+                                            )
+                                        }
+                                        event.changes.fastForEach {
+                                            if (it.positionChanged()) {
+                                                it.consume()
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } else if (transformEventCounter > 3) relevant = false
-                        transformEventCounter++
-                    } while (!canceled && event.changes.fastAny { it.pressed } && relevant)
+                            } else if (transformEventCounter > 3) relevant = false
 
-                    if (zoomableState.dragGestureMode() != DragGestureMode.DISABLED) {
-                        do {
-                            val event = awaitPointerEvent()
-                            drag = event.changes.firstOrNull()?.id?.let { pointerId ->
+                            transformEventCounter++
+                            event = awaitPointerEvent()
+                        }
+
+                        if (zoomableState.dragGestureMode() != DragGestureMode.DISABLED) {
+                            dragChange = event.changes.firstOrNull()?.id?.let { pointerId ->
                                 awaitTouchSlopOrCancellation(pointerId) { change, over ->
                                     if (change.positionChange() != Offset.Zero) change.consume()
                                     overSlop = over
                                 }
                             }
-                        } while (drag != null && !drag.isConsumed)
-                        if (drag != null) {
-                            dragOffset = Offset.Zero
-                            when (zoomableState.dragGestureMode()) {
-                                DragGestureMode.PAN -> coroutineScope.launch {
-                                    zoomableState.transform {
-                                        transformBy(1f, overSlop, 0f)
+
+                            while (dragChange != null && !dragChange.isConsumed) {
+                                dragChange = event.changes.firstOrNull()?.id?.let { pointerId ->
+                                    awaitTouchSlopOrCancellation(pointerId) { change, over ->
+                                        if (change.positionChange() != Offset.Zero) change.consume()
+                                        overSlop = over
                                     }
                                 }
-                                DragGestureMode.SWIPE_GESTURES -> dragOffset += overSlop
-                                else -> {}
+                                event = awaitPointerEvent()
                             }
-                            if (drag(drag.id) {
+                            if (dragChange != null) {
+                                dragOffset = Offset.Zero
+                                when (zoomableState.dragGestureMode()) {
+                                    DragGestureMode.PAN -> coroutineScope.launch {
+                                        zoomableState.transform {
+                                            transformBy(1f, overSlop, 0f)
+                                        }
+                                    }
+                                    DragGestureMode.SWIPE_GESTURES -> dragOffset += overSlop
+                                    else -> {}
+                                }
+                                val dragSuccessful = conditionalDrag(
+                                    dragChange.id,
+                                    condition = { currentEvent.changes.size < 2 }) {
                                     when (zoomableState.dragGestureMode()) {
                                         DragGestureMode.PAN -> {
                                             zoomableState.offset.value += it.positionChange()
@@ -215,19 +234,21 @@ public fun Zoomable(
                                         else -> {}
                                     }
                                     if (it.positionChange() != Offset.Zero) it.consume()
-                                }) {
-                                if (zoomableState.dragGestureMode() == DragGestureMode.SWIPE_GESTURES) {
-                                    val offsetX = dragOffset.x
-                                    if (offsetX > minimumSwipeDistance) {
-                                        onSwipeRight()
-
-                                    } else if (offsetX < -minimumSwipeDistance) {
-                                        onSwipeLeft()
+                                }
+                                if (dragSuccessful) {
+                                    if (zoomableState.dragGestureMode() == DragGestureMode.SWIPE_GESTURES) {
+                                        val offsetX = dragOffset.x
+                                        if (offsetX > minimumSwipeDistance) {
+                                            onSwipeRight()
+                                        } else if (offsetX < -minimumSwipeDistance) {
+                                            onSwipeLeft()
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
+                        Log.d(TAG, "Zoomable: ${currentEvent.changes.map(PointerInputChange::isConsumed)}")
+                    } while (currentEvent.changes.any { !it.isConsumed && !it.changedToUp()})
                 }
             }) {
         Box(
@@ -257,4 +278,23 @@ public fun Zoomable(
             Content()
         }
     }
+}
+
+private suspend fun AwaitPointerEventScope.conditionalDrag(
+    pointerId: PointerId,
+    condition: AwaitPointerEventScope.() -> Boolean,
+    onDrag: (PointerInputChange) -> Unit
+): Boolean {
+    var pointer = pointerId
+    while (condition()) {
+        val change = awaitDragOrCancellation(pointer) ?: return false
+
+        if (change.changedToUpIgnoreConsumed()) {
+            return true
+        }
+
+        onDrag(change)
+        pointer = change.id
+    }
+    return true
 }
