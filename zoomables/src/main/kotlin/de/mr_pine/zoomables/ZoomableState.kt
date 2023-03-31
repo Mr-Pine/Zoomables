@@ -48,7 +48,7 @@ public class ZoomableState(
 ) : TransformableState {
 
     public val zoomed: Boolean
-        get() = scale.value in (1 - zoomedThreshold)..(1 + zoomedThreshold)
+        get() = scale.value !in (1 - zoomedThreshold)..(1 + zoomedThreshold)
 
     public val transformed: Boolean
         get() = zoomed || offset.value.getDistanceSquared() !in -1.0E-6f..1.0E-6f || rotation.value !in -1.0E-3f..1.0E-3f
@@ -102,7 +102,8 @@ public class ZoomableState(
     public suspend fun animateZoomToPosition(
         zoomChange: Float,
         position: Offset,
-        currentComposableCenter: Offset = Offset.Zero
+        currentComposableCenter: Offset = Offset.Zero,
+        animationSpec: AnimationSpec<Float> = SpringSpec(stiffness = Spring.StiffnessLow)
     ) {
         val offsetBuffer = offset.value
 
@@ -124,7 +125,7 @@ public class ZoomableState(
         val transformOffset =
             position - (currentComposableCenter - offsetBuffer) - Offset(x1, y1)
 
-        animateBy(zoomChange = zoomChange, panChange = transformOffset, rotationChange = 0f)
+        animateBy(zoomChange = zoomChange, panChange = transformOffset, rotationChange = 0f, animationSpec)
     }
 
     /**
