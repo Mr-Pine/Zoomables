@@ -53,8 +53,7 @@ ZoomableImage(
      Toast.makeText(
          context, "Swipe left", Toast.LENGTH_LONG
      ).show()
-    },
-    dragGesturesEnabled = {!notTransformed}
+    }
 )
 ```
 
@@ -72,8 +71,7 @@ Zoomable(
      Toast.makeText(
          context, "Swipe right", Toast.LENGTH_LONG
      ).show()
-    },
-    dragGesturesEnabled = {!notTransformed}
+    }
 ) {
     /* Your Composable */
 }
