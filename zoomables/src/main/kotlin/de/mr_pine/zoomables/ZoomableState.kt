@@ -2,15 +2,27 @@
 
 package de.mr_pine.zoomables
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.SpringSpec
+import androidx.compose.animation.core.animateTo
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
 import androidx.compose.foundation.gestures.TransformScope
 import androidx.compose.foundation.gestures.TransformableState
 import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
-import de.mr_pine.zoomables.ZoomableState.Rotation.*
+import de.mr_pine.zoomables.ZoomableState.Rotation.ALWAYS_ENABLED
+import de.mr_pine.zoomables.ZoomableState.Rotation.DISABLED
+import de.mr_pine.zoomables.ZoomableState.Rotation.LOCK_ROTATION_ON_ZOOM_PAN
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -174,7 +186,7 @@ public class ZoomableState(
         private val coroutineScope: CoroutineScope
     ) : DoubleTapBehaviour {
         override fun onDoubleTap(offset: Offset) {
-            if (scale.value != 1f) {
+            if (transformed) {
                 coroutineScope.launch {
                     animateBy(
                         zoomChange = 1 / scale.value,

@@ -2,25 +2,50 @@
 
 package de.mr_pine.zoomables
 
-import androidx.compose.foundation.gestures.*
+import androidx.compose.foundation.gestures.awaitDragOrCancellation
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateRotation
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.*
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.PointerId
+import androidx.compose.ui.input.pointer.PointerInputChange
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.lang.Math.pow
-import kotlin.math.*
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.atan
+import kotlin.math.cos
+import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * Creates a composable that wraps a given [Composable] and adds zoom, pan, rotation, double tap and swipe functionality
@@ -46,7 +71,7 @@ import kotlin.math.*
 public fun Zoomable(
     coroutineScope: CoroutineScope,
     zoomableState: ZoomableState,
-    dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
+    dragGestureMode: ZoomableState.() -> DragGestureMode = DragGestureMode.default,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
     minimumSwipeDistance: Int = 0,
@@ -202,9 +227,10 @@ public fun Zoomable(
                                 when (zoomableState.dragGestureMode()) {
                                     DragGestureMode.PAN -> coroutineScope.launch {
                                         zoomableState.transform {
-                                            transformBy(1f, overSlop, 0f)
+                                            transformBy(panChange = overSlop)
                                         }
                                     }
+
                                     DragGestureMode.SWIPE_GESTURES -> dragOffset += overSlop
                                     else -> {}
                                 }
@@ -213,8 +239,14 @@ public fun Zoomable(
                                     condition = { currentEvent.changes.size < 2 }) {
                                     when (zoomableState.dragGestureMode()) {
                                         DragGestureMode.PAN -> {
-                                            zoomableState.offset.value += it.positionChange()
+                                            val positionChange = it.positionChange()
+                                            coroutineScope.launch {
+                                                zoomableState.transform {
+                                                    transformBy(panChange = positionChange)
+                                                }
+                                            }
                                         }
+
                                         DragGestureMode.SWIPE_GESTURES -> dragOffset += it.positionChange()
                                         else -> {}
                                     }
