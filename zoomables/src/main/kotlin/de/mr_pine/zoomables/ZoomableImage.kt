@@ -35,7 +35,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
+    dragGestureMode: ZoomableState.() -> DragGestureMode = DragGestureMode.default,
     onTap: ((Offset) -> Unit)? = null,
     doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
@@ -74,7 +74,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
+    dragGestureMode: ZoomableState.() -> DragGestureMode = DragGestureMode.default,
     onTap: ((Offset) -> Unit)? = null,
     doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
@@ -117,7 +117,7 @@ public fun ZoomableImage(
     contentDescription: String? = null,
     onSwipeLeft: () -> Unit = {},
     onSwipeRight: () -> Unit = {},
-    dragGestureMode: ZoomableState.() -> DragGestureMode = { if (zoomed) DragGestureMode.SWIPE_GESTURES else DragGestureMode.PAN },
+    dragGestureMode: ZoomableState.() -> DragGestureMode = DragGestureMode.default,
     onTap: ((Offset) -> Unit)? = null,
     doubleTapBehaviour: DoubleTapBehaviour? = zoomableState.DefaultDoubleTapBehaviour(coroutineScope = coroutineScope)
 ) {
